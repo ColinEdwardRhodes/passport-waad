@@ -39,7 +39,8 @@
     "xml-crypto": "0.0.x",
     "xml2js": "0.2.6",
     "xmldom": "0.1.x",
-    "xtend": "~2.0.3"
+    "xtend": "~2.0.3",
+    "json-query": "1.4.0"
   },
   "devDependencies": {
     "grunt-contrib-jshint": "~0.1.1",
