@@ -33,7 +33,6 @@
     "express": "3.2.6",
     "jade": "1.8.2",
     "passport": "0.1.x",
-    "passport-azure-ad-eht": "0.0.1",
     "request": "~2.16.6",
     "underscore": "~1.4.4",
     "with": "4.0.0",
