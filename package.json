@@ -25,9 +25,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://ehealthtechnologies.visualstudio.com/DefaultCollection/ECP/_git/AzureIntegration"
+    "url": "https://github.com/ColinEdwardRhodes/passport-waad.git"
   },
-  "main": "./lib/passport-azure-ad-eht",
+  "main": "./lib/passport-waad",
   "dependencies": {
     "async": "~0.2.7",
     "express": "3.2.6",
@@ -57,25 +57,25 @@
   "bugs": {
     "url": ""
   },
-  "homepage": "https://ehealthtechnologies.visualstudio.com/DefaultCollection/ECP/_git/AzureIntegration",
-  "_id": "passport-azure-ad-eht@0.0.1",
+  "homepage": "https://github.com/ColinEdwardRhodes/azure-waad.git",
+  "_id": "passport-waad@0.0.1",
   "dist": {
     "shasum": "7a4e8d43af594c94f340d71aea83844de69b8814",
-    "tarball": "http://registry.npmjs.org/passport-azure-ad/-/passport-azure-ad-eht-0.0.1.tgz"
+    "tarball": "http://registry.npmjs.org/passport-waad/passport-waad-0.0.1.tgz"
   },
-  "_from": "passport-azure-ad-eht@",
+  "_from": "passport-waad@",
   "_npmVersion": "0.0.1",
   "_npmUser": {
-    "name": "colin.rhodes",
-    "email": "colin.rhodes@ehealthtechnologies.com"
+    "name": "ColinEdwardRhodes",
+    "email": "ColinEdwardRhodes@gmail.com"
   },
   "maintainers": [
     {
-      "name": "Colin Rhodes",
-      "email": "colin.rhodes@ehealthtechnologies.com"
+      "name": "ColinEdwardRhodes",
+      "email": "ColinEdwardRhodes@gmail.com"
     }
   ],
   "directories": {},
   "_shasum": "7a4e8d43af594c94f340d71aea83844de69b8814",
-  "_resolved": "https://registry.npmjs.org/passport-azure-ad/-/passport-azure-ad-eht-0.0.1.tgz"
+  "_resolved": "https://registry.npmjs.org/passport-waad/-/passport-waad-0.0.1.tgz"
 }
