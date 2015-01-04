@@ -1,48 +1,48 @@
-/*
- *  Demonstration app for passport-waad.
- *
- */
+/////////////////////////////////////////////
+//
+//  passport-waad sample code.
+//
+/////////////////////////////////////////////c
 
- "use strict";
-
-var express = require('express')
-  , routes = require('./routes')
-  , user = require('./routes/user')
-  , http = require('http')
-  , path = require('path')
-  , passport = require('passport')
-  , waadPassport = require('../../lib/passport-waad/index').waadPassport;
+var express = require('express'),
+    path = require('path'),
+    favicon = require('serve-favicon'),
+    logger = require('morgan'),
+    cookieParser = require('cookie-parser'),
+    bodyParser = require('body-parser'),
+    expressSession = require('express-session'),
+    waad = require('../../lib/passport-waad').waadPassport ,
+    passport = require('passport');
   
+var sessionSecret = '#$&#*(*)#$*(&';
 var app = express();
 
-// Set to SAML or test
-var authMethod = 'saml';
+//
+//  Middleware
+//
+//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(logger('dev'));
+app.use(cookieParser(sessionSecret));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// all environments
-app.set('port', process.env.PORT || 3000);
-app.set('views', __dirname + '/views');
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-
-app.use(express.cookieParser('your secret here'));
-app.use(express.session({ secret: 'keyboard cat' }));
+app.use(require('stylus').middleware(path.join(__dirname, 'public')));
+app.use(expressSession({ secret: sessionSecret }));
 
 // Creating the auth object wires passport under the hood.
-var auth = new waadPassport.waadPassport({
+var auth = new waad.waadPassport({
   configurationFile : 'passportConfig/config.json',
   passport : passport,
-  name : authMethod, // set to test for local development
+  name : 'saml',    //set to test for dev
   app : app
 });
 
-var router = require('express').Router();
+var router = express.Router();
 
-app.use(express.favicon());
-app.use(express.logger('dev'));
-app.use(express.bodyParser());
-app.use(express.methodOverride());
-app.use(app.router);
-
-app.get('/', function(req, res){
+router.get('/', function(req, res){
   
   if(req.user) {
     res.render('index', { 
@@ -54,7 +54,18 @@ app.get('/', function(req, res){
   }
 });
 
-app.get('/user',
+
+// Order of routes is important!!
+auth.setSSORoutes(
+  router,
+  function(req,res,next) { 
+    next();
+  },
+  function(req,res,next){ 
+    next();
+  }
+);
+router.get('/user',
   auth.ensureAuthenticated,
   auth.memberOf("User", function(req,res) { 
       res.render('notWorthy', { group : 'User' } );
@@ -63,7 +74,7 @@ app.get('/user',
     res.render('worthy', {  group : 'User' });
   });
   
-app.get('/nouser',
+router.get('/nouser',
   auth.ensureAuthenticated,
   auth.memberOf("NoUser", function(req,res) { 
       res.render('notWorthy', { group : 'NoUser' } );
@@ -71,19 +82,9 @@ app.get('/nouser',
   function(req,res) { 
     res.render('worthy', {  group : 'NoUser' });
   });
-  
-// Order of routes is important!!
-auth.setSSORoutes(router);
+
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/', router);
 
-app.use(express.errorHandler());
-
-http.createServer(app).listen(app.get('port'), function(){
-  console.log('Sample ADFS Azure app');
-  console.log('');
-  console.log('NOTE: Your machine must have a fqdn, AND it must be configured in config.json');
-  console.log('AND azure must be configured with callbacks to the fqdn');
-  console.log('');
-  console.log('Express server listening on port ' + app.get('port'));
-});
+app.listen(process.env.PORT);
