@@ -28,11 +28,13 @@ app.use(express.session({ secret: 'keyboard cat' }));
 
 // Creating the auth object wires passport under the hood.
 var auth = new waadPassport.waadPassport({
-  configurationFile : 'waadPassport/config.json',
+  configurationFile : 'passportConfig/config.json',
   passport : passport,
   name : authMethod, // set to test for local development
   app : app
 });
+
+var router = require('express').Router();
 
 app.use(express.favicon());
 app.use(express.logger('dev'));
@@ -71,7 +73,7 @@ app.get('/nouser',
   });
   
 // Order of routes is important!!
-auth.setSSORoutes();
+auth.setSSORoutes(router);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
