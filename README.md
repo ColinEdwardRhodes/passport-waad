@@ -10,13 +10,19 @@ This module relies on a great deal of configuration at Azure and also the provis
 
 ```javascript
 {
-    "appUrl": "https://passporttestazure-colinedwardrhodes.c9.io",
+    "appUrl": "https://passporttestazure-colinedwardrhodes-1.c9.io/",
     "identityMetadata" : "https://login.windows.net/1ad458eb-55b8-484b-b1b7-379be2dd07f6/federationmetadata/2007-06/federationmetadata.xml",
-    "loginCallback" :"https://passporttestazure-colinedwardrhodes.c9.io/login/callback/",
-    "issuer" : "https://passporttestazure-colinedwardrhodes.c9.io",
-    "logoutCallback" : "https://passporttestazure-colinedwardrhodes.c9.io/logout/callback/",
-    "privateCert" : "./certs/private.pem",
-    "publicCert" : "./certs/public.pem"
+    "loginCallback" :"https://passporttestazure-colinedwardrhodes-1.c9.io/login/callback/",
+    "issuer" : "https://passporttestazure-colinedwardrhodes-1.c9.io/",
+    "logoutCallback" : "https://passporttestazure-colinedwardrhodes-1.c9.io/logout/callback/",
+    "privateCert" : "./passportConfig/private.pem",
+    "publicCert" : "./passportConfig/public.pem",
+    "tenant":  "ehtTest.onmicrosoft.com",
+    "clientId": "e20b5f78-4e8c-4dc2-b891-70d9b6ac4bfb",
+    "clientSecret": "bLnXHFXGNGOZ8qU+fe+rekcIZBS5rW6PUOTRlxoS7qA=",
+    "testGroups" : [ { "name" : "ReferralGatewayCoordinator" } ],
+    "testUser" : "colin.rhodes@ehealthtechnologies.com",
+    "testUserName" : "Colin Rhodes"
 }
 ```
 
@@ -33,67 +39,96 @@ This sample uses a SAML protocol with express.  Please pay close attention to th
 Please use the middleware ```ensureAuthenticated``` on routes to ensure users cannot access them without passing auth.
 
 ```javascript
-/*
- *  Demonstration app for passport-saml
- */
+/////////////////////////////////////////////
+//
+//  passport-waad sample code.
+//
+/////////////////////////////////////////////c
 
- "use strict";
-
-var express = require('express')
-  , routes = require('./routes')
-  , user = require('./routes/user')
-  , http = require('http')
-  , path = require('path')
-  , passport = require('passport')
-  , ehtPassport = require('../../lib/passport-azure-ad/index').ehtPassport;
+var express = require('express'),
+    path = require('path'),
+    favicon = require('serve-favicon'),
+    logger = require('morgan'),
+    cookieParser = require('cookie-parser'),
+    bodyParser = require('body-parser'),
+    expressSession = require('express-session'),
+    waad = require('../../lib/passport-waad').waadPassport ,
+    passport = require('passport');
   
+var sessionSecret = '#$&#*(*)#$*(&';
 var app = express();
 
-// all environments
-app.set('port', process.env.PORT || 3000);
-app.set('views', __dirname + '/views');
-app.set('view engine', 'jade');
+//
+//  Middleware
+//
+//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(logger('dev'));
+app.use(cookieParser(sessionSecret));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(express.cookieParser('your secret here'));
-app.use(express.session({ secret: 'keyboard cat' }));
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+app.use(require('stylus').middleware(path.join(__dirname, 'public')));
+app.use(expressSession({ secret: sessionSecret }));
 
 // Creating the auth object wires passport under the hood.
-var auth = new ehtPassport.ehtPassport({
-  configurationFile : 'ehtPassport/config.json',
+var auth = new waad.waadPassport({
+  configurationFile : 'passportConfig/config.json',
   passport : passport,
-  name : 'saml',
+  name : 'saml',    //set to test for dev
   app : app
 });
 
-app.use(express.favicon());
-app.use(express.logger('dev'));
-app.use(express.bodyParser());
-app.use(express.methodOverride());
-app.use(app.router);
+var router = express.Router();
 
-app.get('/', function(req, res){
+router.get('/', function(req, res){
+  
   if(req.user) {
-    res.render('index', { group: req.user.group, message: 'user', email : req.user.email});
+    res.render('index', { 
+      user : req.user,
+      method : auth.name
+    });
   } else {
     res.render('notLoggedIn', { } );
   }
 });
 
+
 // Order of routes is important!!
-auth.setSSORoutes();
+auth.setSSORoutes(
+  router,
+  function(req,res,next) { 
+    next();
+  },
+  function(req,res,next){ 
+    next();
+  }
+);
+router.get('/user',
+  auth.ensureAuthenticated,
+  auth.memberOf("User", function(req,res) { 
+      res.render('notWorthy', { group : 'User' } );
+  }),
+  function(req,res) { 
+    res.render('worthy', {  group : 'User' });
+  });
+  
+router.get('/nouser',
+  auth.ensureAuthenticated,
+  auth.memberOf("NoUser", function(req,res) { 
+      res.render('notWorthy', { group : 'NoUser' } );
+  }),
+  function(req,res) { 
+    res.render('worthy', {  group : 'NoUser' });
+  });
+
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/', router);
 
-app.use(express.errorHandler());
-
-http.createServer(app).listen(app.get('port'), function(){
-  console.log('Sample ADFS Azure app');
-  console.log('');
-  console.log('NOTE: Your machine must have a fqdn, AND it must be configured in config.json');
-  console.log('AND azure must be configured with callbacks to the fqdn');
-  console.log('');
-  console.log('Express server listening on port ' + app.get('port'));
-});
+app.listen(process.env.PORT);
 
 ```
 
